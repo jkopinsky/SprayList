@@ -154,4 +154,4 @@ spray: measurements.o ssalloc.o skiplist.o fraser.o intset.o test.o pqueue.o lin
 	$(CC) $(CFLAGS) $(BUILDIR)/pqueue.o $(BUILDIR)/measurements.o $(BUILDIR)/ssalloc.o $(BUILDIR)/skiplist.o $(BUILDIR)/fraser.o $(BUILDIR)/intset.o $(BUILDIR)/test.o $(BUILDIR)/linden.o $(BUILDIR)/linden_common.o $(BUILDIR)/ptst.o $(BUILDIR)/gc.o -o $(BINS) $(LDFLAGS)
 
 clean:
-	-rm -f $(BINS)
+	-rm -f $(BINS) $(BUILDIR)/*.o
