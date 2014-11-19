@@ -181,7 +181,7 @@ retry:
 
   /* return if key already exists, i.e., is present in a non-deleted
    * node */
-  if (succs[0]->k == k && !is_marked_ref(preds[0]->next[0]) && preds[0]->next[0] == succs[0]) {
+  if (succs[0]->k == k && succs[0]->v == v && !is_marked_ref(preds[0]->next[0]) && preds[0]->next[0] == succs[0]) {
     new->inserting = 0;
     free_node(new);
     //	goto out;
@@ -298,9 +298,14 @@ restructure(pq_t *pq)
  * not have the delete bit set. 
  */
   pval_t
-deletemin(pq_t *pq, thread_data_t *d)
-{
-  pval_t   v = NULL;
+deletemin(pq_t *pq, thread_data_t *d) {
+  pkey_t key;
+  return deletemin_key(pq, &key, d);
+}
+
+  pval_t
+deletemin_key(pq_t *pq, pkey_t *key, thread_data_t *d) {
+  pval_t   v = 0;
   node_t *x, *nxt, *obs_head = NULL, *newhead, *cur;
   int offset, lvl;
 
@@ -321,6 +326,7 @@ deletemin(pq_t *pq, thread_data_t *d)
 
     // tail cannot be deleted
     if (get_unmarked_ref(nxt) == pq->tail) {
+      *key = -1; // empty flag
       goto out;
     }
 
@@ -342,6 +348,7 @@ deletemin(pq_t *pq, thread_data_t *d)
 
   assert(!is_marked_ref(x));
 
+  *key = x->k;
   v = x->v;
 
 

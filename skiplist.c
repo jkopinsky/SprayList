@@ -56,7 +56,7 @@ floor_log_2(unsigned int n)
  * Create a new node without setting its next fields. 
  */
 sl_node_t*
-sl_new_simple_node(val_t val, int toplevel, int transactional)
+sl_new_simple_node_val(slkey_t key, val_t val, int toplevel, int transactional)
 {
   sl_node_t *node;
 
@@ -85,6 +85,7 @@ sl_new_simple_node(val_t val, int toplevel, int transactional)
       exit(1);
     }
 
+  node->key = key;
   node->val = val;
   node->toplevel = toplevel;
   node->deleted = 0;
@@ -94,17 +95,23 @@ sl_new_simple_node(val_t val, int toplevel, int transactional)
   return node;
 }
 
+sl_node_t*
+sl_new_simple_node(slkey_t key, int toplevel, int transactional)
+{
+  return sl_new_simple_node_val(key, (val_t) key, toplevel, transactional);
+}
+
 /* 
  * Create a new node with its next field. 
  * If next=NULL, then this create a tail node. 
  */
 sl_node_t*
-sl_new_node(val_t val, sl_node_t *next, int toplevel, int transactional)
+sl_new_node_val(slkey_t key, val_t val, sl_node_t *next, int toplevel, int transactional)
 {
   volatile sl_node_t *node;
   int i;
 
-  node = sl_new_simple_node(val, toplevel, transactional);
+  node = sl_new_simple_node_val(key, val, toplevel, transactional);
 
   for (i = 0; i < *levelmax; i++)
     node->next[i] = next;
@@ -112,6 +119,12 @@ sl_new_node(val_t val, sl_node_t *next, int toplevel, int transactional)
   MEM_BARRIER;
 
   return (sl_node_t*) node;
+}
+
+sl_node_t*
+sl_new_node(slkey_t key, sl_node_t *next, int toplevel, int transactional)
+{
+  return sl_new_node_val(key, (val_t) key, next, toplevel, transactional);
 }
 
 void
@@ -137,8 +150,8 @@ sl_set_new()
 
   ssalloc_align_alloc(1);
 
-  max = sl_new_node(VAL_MAX, NULL, *levelmax, 0);
-  min = sl_new_node(VAL_MIN, max, *levelmax, 0);
+  max = sl_new_node(KEY_MAX, NULL, *levelmax, 0);
+  min = sl_new_node(KEY_MIN, max, *levelmax, 0);
   set->head = min;
   return set;
 }

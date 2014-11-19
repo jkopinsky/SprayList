@@ -181,8 +181,8 @@ void* test(void *data) {
               } else {
                 continue;
               }
-            } else if (d->pq) { // naive pq
-              if (naive_delete_min(d->set, &val, d)) {
+            } else if (d->pq) { // lotan_shavit pq
+              if (lotan_shavit_delete_min(d->set, &val, d)) {
                 d->nb_removed++;
                 //         continue; // TODO: maybe try remove this to simulate task handling (dependency checks still occur)
               } else {
@@ -230,7 +230,7 @@ void* test(void *data) {
           } else { // remove
 
             if (d->pq) {
-              if (naive_delete_min(d->set, &val, d)) {
+              if (lotan_shavit_delete_min(d->set, &val, d)) {
                 d->nb_removed++;
                 if (d->first_remove == -1) {
                   d->first_remove = val;
@@ -451,7 +451,7 @@ int main(int argc, char **argv)
             "  -l, --spray-list\n"
             "        Remove via delete_min operations using a spray list\n"
             "  -p, --priority-queue\n"
-            "        Remove via delete_min operations using a Lotan-Shavit queue\n"
+            "        Remove via delete_min operations using a skip list\n"
             "  -e, --event-simulator\n"
             "        Descrete event simulator experiment, parameter = dependency distance\n"
             "  -L, --linden\n"
@@ -868,9 +868,7 @@ int main(int argc, char **argv)
   printf("#total_removed: %lu\n", removed);
   printf("#total_add    : %lu\n", add);
   printf("#total_added  : %lu\n", added);
-  if (data[0].es) {
-    printf("#net (rem-add): %lu\n", removed-added);
-  }
+  printf("#net (rem-add): %lu\n", removed-added);
   printf("#total_collide: %lu\n", collisions);
   printf("#norm_collide : %f\n", ((double)collisions)/removed);
 

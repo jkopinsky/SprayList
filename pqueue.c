@@ -47,7 +47,12 @@ static int _MarsagliaXOR(int seed) {
   return seed;
 }
 
-int naive_delete_min(sl_intset_t *set, val_t *val, thread_data_t *d) {
+int lotan_shavit_delete_min(sl_intset_t *set, val_t *val, thread_data_t *d) {
+  slkey_t key;
+  return lotan_shavit_delete_min_key(set, &key, val, d);
+}
+
+int lotan_shavit_delete_min_key(sl_intset_t *set, slkey_t *key, val_t *val, thread_data_t *d) {
   sl_node_t *first;
   int result;
 
@@ -57,7 +62,7 @@ int naive_delete_min(sl_intset_t *set, val_t *val, thread_data_t *d) {
     do {
       first = (sl_node_t*)unset_mark((uintptr_t)first->next[0]);
     } while(first->next[0] && first->deleted);
-   if (ATOMIC_FETCH_AND_INC_FULL(&first->deleted) != 0) {
+   if (first->next[0] && ATOMIC_FETCH_AND_INC_FULL(&first->deleted) != 0) {
      d->nb_collisions++;
    } else {
      break;
@@ -66,10 +71,12 @@ int naive_delete_min(sl_intset_t *set, val_t *val, thread_data_t *d) {
 
   result = (first->next[0] != NULL);
   if (!result) {
+    *key = -1;
     return 1;
   }
   
   *val = (first->val);
+  *key = (first->key);
   mark_node_ptrs(first);
 
   // unsigned int *seed = &d->seed2;
@@ -78,21 +85,26 @@ int naive_delete_min(sl_intset_t *set, val_t *val, thread_data_t *d) {
   //   fraser_search(set, first->val, NULL, NULL);    
   // }
 
-  if (!first->next[0]->deleted)
-     fraser_search(set, first->val, NULL, NULL);    
+  // if (!first->next[0]->deleted)
+     fraser_search(set, first->key, NULL, NULL);    
 
   return result; 
 }
 
 int spray_delete_min(sl_intset_t *set, val_t *val, thread_data_t *d) {
+  slkey_t key;
+  return spray_delete_min_key(set, &key, val, d);
+}
+
+int spray_delete_min_key(sl_intset_t *set, slkey_t *key, val_t *val, thread_data_t *d) {
   unsigned int n = d->nb_threads;
   unsigned int *seed = &d->seed2;
 
 #ifndef DISTRIBUTION_EXPERIMENT 
   *seed = _MarsagliaXOR(*seed);
-  if (n == 1 || *seed % n/*/floor_log_2(n)*/ == 0) { // n == 1 is equivalent to naive delete_min
+  if (n == 1 || *seed % n/*/floor_log_2(n)*/ == 0) { // n == 1 is equivalent to Lotan-Shavit delete_min
     d->nb_clean++;
-    return naive_delete_min(set, val, d);
+    return lotan_shavit_delete_min_key(set, key, val, d);
   }
 #endif
 
@@ -124,7 +136,10 @@ int spray_delete_min(sl_intset_t *set, val_t *val, thread_data_t *d) {
 
     // TODO: This is probably a reasonable condition to become a 'cleaner' since the list is so small
     //       We can also just ignore it since it shouldn't happen in benchmarks?
-    if (!cur->next[0]) return 0; //got to end of list
+    if (!cur->next[0]) {
+      *key = -1;
+      return 0; //got to end of list
+    }
 
     scanmax += scan_inc;
 
@@ -144,6 +159,7 @@ int spray_delete_min(sl_intset_t *set, val_t *val, thread_data_t *d) {
 
 #ifdef DISTRIBUTION_EXPERIMENT 
   *val = (cur->val);
+  *key = (cur->key);
   return 1;
 #endif
 
@@ -158,12 +174,13 @@ int spray_delete_min(sl_intset_t *set, val_t *val, thread_data_t *d) {
   }
 
   *val = (cur->val);
+  *key = (cur->key);
   mark_node_ptrs(cur);
 
   // if (((*seed) & 0x10)) return 1;  
 
   // TODO: batch deletes (this method is somewhat inefficient)
-  // fraser_search(set, cur->val, NULL, NULL);
+  fraser_search(set, cur->val, NULL, NULL);
 
   return 1; 
 }

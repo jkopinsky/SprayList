@@ -111,11 +111,13 @@ LDFLAGS += -lpthread -lrt -lm
 
 LINDENFLAGS = -DCACHE_LINE_SIZE=`getconf LEVEL1_DCACHE_LINESIZE` -DINTEL
 
-BINS = $(BINDIR)/spray
+SPRAY = $(BINDIR)/spray
+SSSP = $(BINDIR)/sssp
+BINS = $(BINDIR)/*
 
 .PHONY:	all clean
 
-all:	spray
+all:	spray sssp
 
 measurements.o:
 	$(CC) $(CFLAGS) -c -o $(BUILDIR)/measurements.o measurements.c
@@ -147,11 +149,17 @@ intset.o: skiplist.h fraser.h
 test.o: skiplist.h fraser.h intset.h
 	$(CC) $(CFLAGS) -c -o $(BUILDIR)/test.o test.c
 
+sssp.o: skiplist.h fraser.h intset.h
+	$(CC) $(CFLAGS) -c -o $(BUILDIR)/sssp.o sssp.c
+
 pqueue.o: skiplist.h intset.h
 	$(CC) $(CFLAGS) -c -o $(BUILDIR)/pqueue.o pqueue.c
 
 spray: measurements.o ssalloc.o skiplist.o fraser.o intset.o test.o pqueue.o linden.o linden_common.o gc.o ptst.o
-	$(CC) $(CFLAGS) $(BUILDIR)/pqueue.o $(BUILDIR)/measurements.o $(BUILDIR)/ssalloc.o $(BUILDIR)/skiplist.o $(BUILDIR)/fraser.o $(BUILDIR)/intset.o $(BUILDIR)/test.o $(BUILDIR)/linden.o $(BUILDIR)/linden_common.o $(BUILDIR)/ptst.o $(BUILDIR)/gc.o -o $(BINS) $(LDFLAGS)
+	$(CC) $(CFLAGS) $(BUILDIR)/pqueue.o $(BUILDIR)/measurements.o $(BUILDIR)/ssalloc.o $(BUILDIR)/skiplist.o $(BUILDIR)/fraser.o $(BUILDIR)/intset.o $(BUILDIR)/test.o $(BUILDIR)/linden.o $(BUILDIR)/linden_common.o $(BUILDIR)/ptst.o $(BUILDIR)/gc.o -o $(SPRAY) $(LDFLAGS)
+
+sssp: measurements.o ssalloc.o skiplist.o fraser.o intset.o sssp.o pqueue.o linden.o linden_common.o gc.o ptst.o
+	$(CC) $(CFLAGS) $(BUILDIR)/pqueue.o $(BUILDIR)/measurements.o $(BUILDIR)/ssalloc.o $(BUILDIR)/skiplist.o $(BUILDIR)/fraser.o $(BUILDIR)/intset.o $(BUILDIR)/sssp.o $(BUILDIR)/linden.o $(BUILDIR)/linden_common.o $(BUILDIR)/ptst.o $(BUILDIR)/gc.o -o $(SSSP) $(LDFLAGS)
 
 clean:
 	-rm -f $(BINS) $(BUILDIR)/*.o

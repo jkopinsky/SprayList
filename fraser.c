@@ -44,7 +44,7 @@ uintptr_t set_mark(uintptr_t i)
 }
 
 
-void fraser_search(sl_intset_t *set, val_t val, sl_node_t **left_list, sl_node_t **right_list)
+void fraser_search(sl_intset_t *set, slkey_t key, sl_node_t **left_list, sl_node_t **right_list)
 {
   int i;
   sl_node_t *left, *left_next, *right, *right_next;
@@ -67,7 +67,7 @@ retry:
           break;
         right = (sl_node_t*)unset_mark((uintptr_t)right_next);
       }
-      if (right->val >= val)
+      if (right->key >= key)
         break;
       left = right; 
       left_next = right_next;
@@ -84,15 +84,16 @@ retry:
 }
 
   int 
-fraser_find(sl_intset_t *set, val_t val) 
+fraser_find(sl_intset_t *set, slkey_t key, val_t *val) 
 {
   sl_node_t **succs;
   int result;
 
   /* succs = (sl_node_t **)malloc(*levelmax * sizeof(sl_node_t *)); */
   succs = (sl_node_t **)ssalloc(*levelmax * sizeof(sl_node_t *));
-  fraser_search(set, val, NULL, succs);
-  result = (succs[0]->val == val && !succs[0]->deleted);
+  fraser_search(set, key, NULL, succs);
+  result = (succs[0]->key == key && !succs[0]->deleted);
+  *val = succs[0]->val; // garbage if result = 0
   /* free(succs); */
   ssfree(succs);
   return result;
@@ -117,20 +118,22 @@ void mark_node_ptrs(sl_node_t *n)
 }
 
   int
-fraser_remove(sl_intset_t *set, val_t val, int remove_succ)
+fraser_remove(sl_intset_t *set, slkey_t key, val_t *val, int remove_succ)
 {
   sl_node_t **succs;
   int result;
 
   /* succs = (sl_node_t **)malloc(*levelmax * sizeof(sl_node_t *)); */
   succs = (sl_node_t **)ssalloc(*levelmax * sizeof(sl_node_t *));
-  fraser_search(set, val, NULL, succs);
+  fraser_search(set, key, NULL, succs);
 
   if (remove_succ) {
     result = (succs[0]->next[0] != NULL); // Don't remove tail
-    val = succs[0]->val;
+    key = succs[0]->key;
+    *val = succs[0]->val;
   } else {
-    result = (succs[0]->val == val);
+    result = (succs[0]->key == key);
+    *val = succs[0]->val;
   }
 
   if (result == 0)
@@ -150,7 +153,7 @@ fraser_remove(sl_intset_t *set, val_t val, int remove_succ)
 
     /* MEM_BARRIER; */
 
-    fraser_search(set, val, NULL, NULL);
+    fraser_search(set, key, NULL, NULL);
   }
   else
   {
@@ -164,22 +167,22 @@ end:
 }
 
   int
-fraser_insert(sl_intset_t *set, val_t v) 
+fraser_insert(sl_intset_t *set, slkey_t key, val_t val) 
 {
   sl_node_t *new, *new_next, *pred, *succ, **succs, **preds;
   int i;
   int result = 0;
 
-  new = sl_new_simple_node(v, get_rand_level(), 0);
+  new = sl_new_simple_node_val(key, val, get_rand_level(), 0);
   /* preds = (sl_node_t **)malloc(*levelmax * sizeof(sl_node_t *)); */
   /* succs = (sl_node_t **)malloc(*levelmax * sizeof(sl_node_t *)); */
   preds = (sl_node_t **)ssalloc(*levelmax * sizeof(sl_node_t *));
   succs = (sl_node_t **)ssalloc(*levelmax * sizeof(sl_node_t *));
 
 retry: 	
-  fraser_search(set, v, preds, succs);
+  fraser_search(set, key, preds, succs);
   /* Update the value field of an existing node */
-  if (succs[0]->val == v) 
+  if (succs[0]->key == key && succs[0]->val == val) 
   {				/* Value already in list */
     if (succs[0]->deleted)
     {		   /* Value is deleted: remove it and retry */
@@ -221,14 +224,14 @@ retry:
           (!ATOMIC_CAS_MB(&new->next[i], unset_mark((uintptr_t)new_next), succ)))
         break; /* Give up if pointer is marked */
       /* Check for old reference to a k node */
-      if (succ->val == v)
+      if (succ->key == key && succ->val == val)
         succ = (sl_node_t *)unset_mark((uintptr_t)succ->next);
       /* We retry the search if the CAS fails */
       if (ATOMIC_CAS_MB(&pred->next[i], succ, new))
         break;
 
       /* MEM_BARRIER; */
-      fraser_search(set, v, preds, succs);
+      fraser_search(set, key, preds, succs);
     }
   }
 

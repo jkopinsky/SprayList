@@ -42,7 +42,7 @@
 #define DEFAULT_INITIAL                 1024
 #define DEFAULT_NB_THREADS              1
 #define DEFAULT_RANGE                   (2 * DEFAULT_INITIAL)
-#define DEFAULT_SEED                    0
+#define DEFAULT_SEED                    1
 #define DEFAULT_UPDATE                  20
 #define DEFAULT_ELASTICITY              4
 #define DEFAULT_ALTERNATE               0
@@ -57,15 +57,18 @@
 
 extern uint8_t levelmax[64];
 
-#define TRANSACTIONAL                   d->unit_tx
+#define TRANSACTIONAL                   4 // TODO: get rid of this
 
+typedef unsigned long slkey_t;
 typedef unsigned long val_t;
 typedef intptr_t level_t;
-#define VAL_MIN                         INT_MIN
-#define VAL_MAX                         INT_MAX
+#define KEY_MIN                         INT_MIN
+#define KEY_MAX                         INT_MAX
+#define DEFAULT_VAL                     0
 
 typedef ALIGNED(64) struct sl_node
 {
+  slkey_t key;
   val_t val;
   
   int toplevel;
@@ -81,8 +84,10 @@ typedef ALIGNED(64) struct sl_intset
 int get_rand_level();
 int floor_log_2(unsigned int n);
 
-sl_node_t *sl_new_simple_node(val_t val, int toplevel, int transactional);
-sl_node_t *sl_new_node(val_t val, sl_node_t *next, int toplevel, int transactional);
+sl_node_t *sl_new_simple_node(slkey_t key, int toplevel, int transactional);
+sl_node_t *sl_new_simple_node_val(slkey_t key, val_t val, int toplevel, int transactional);
+sl_node_t *sl_new_node_val(slkey_t key, val_t val, sl_node_t *next, int toplevel, int transactional);
+sl_node_t *sl_new_node(slkey_t key, sl_node_t *next, int toplevel, int transactional);
 void sl_delete_node(sl_node_t *n);
 
 sl_intset_t *sl_set_new();
