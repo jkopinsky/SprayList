@@ -72,6 +72,11 @@ typedef ALIGNED(64) struct thread_data {
   /* LINDEN */
   int lin;
   pq_t *linden_set;
+
+  /*MultiQueues */
+  int mult;
+  void* multiqueue;
+  void* mq_rand;
 } thread_data_t;
 
 
