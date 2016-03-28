@@ -172,7 +172,7 @@ void* sssp(void *data) {
        break;
      } else {
        printf("error: no queue selected\n");
-       exit(1); // TODO: grace
+       exit(1);
      }
      if (dist_node == -1) { // flag that list is empty
        break;
@@ -214,6 +214,8 @@ void* sssp(void *data) {
   //           radius = dist_node+1;
   //           printf("radius %d\n", radius);
   //         }
+        } else {
+          i--; // retry
         }
       } 
     }
