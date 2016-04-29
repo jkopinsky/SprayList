@@ -11,7 +11,6 @@
 #include "intset.h"
 #include "math.h"
 #include "linden.h"
-#include "multiqueue/multiqueue.h"
 //#include "gc/ptst.h"
 
 //#define STATIC
@@ -151,13 +150,8 @@ void* sssp(void *data) {
   int fail = 0;
   // int radius = 0;
   while (1) {
-    //val_t node;
-    //slkey_t dist_node;
-
-    // TODO: Probably broke compatibility with linden
-    int node;
-    int dist_node;
-
+    val_t node;
+    slkey_t dist_node;
   //   print_skiplist(d->set);
     while (1) { 
      if (d->sl) {
@@ -166,10 +160,6 @@ void* sssp(void *data) {
        if (lotan_shavit_delete_min_key(d->set, &dist_node, &node, d)) break;
      } else if (d->lin) {
        node = (val_t) deletemin_key(d->linden_set, &dist_node, d); break;
-     } else if (d->mult) {
-       dist_node = multiqueue_delete_min(d->multiqueue, d->mq_rand, &node);
-//     printf("deleted %d %d\n", dist_node, node);
-       break;
      } else {
        printf("error: no queue selected\n");
        exit(1);
@@ -206,8 +196,6 @@ void* sssp(void *data) {
             sl_add_val(d->set, dist_node+w, v, TRANSACTIONAL); // add to queue only if CAS is successful
           } else if (d->lin) {
             insert(d->linden_set, dist_node+w, v);
-          } else if (d->mult) {
-            multiqueue_insert(dist_node+w, v, d->multiqueue, d->mq_rand);
           }
           d->nb_add++;
   //         if (dist_node+1 > radius) {
@@ -299,7 +287,6 @@ int main(int argc, char **argv)
   int pq = DEFAULT_PQ;
   int sl = DEFAULT_SL;
   int lin = DEFAULT_LIN;
-  int mult = DEFAULT_MULT;
   char *input = "";
   char *output = "";
   int src = 0;
@@ -310,7 +297,7 @@ int main(int argc, char **argv)
 
   while(1) {
     i = 0;
-    c = getopt_long(argc, argv, "hplLMwbn:s:i:o:m:", long_options, &i);
+    c = getopt_long(argc, argv, "hplLwbn:s:i:o:m:", long_options, &i);
 
     if(c == -1)
       break;
@@ -337,8 +324,6 @@ int main(int argc, char **argv)
             "        Remove via delete_min operations using a skip list\n"
             "  -L, --linden\n"
             "        Use Linden's priority queue\n"
-            "  -M, --multi-queue\n"
-            "        Use MultiQueues\n"
             "  -n, --num-threads <int>\n"
             "        Number of threads (default=" XSTR(DEFAULT_NB_THREADS) ")\n"
             "  -s, --seed <int>\n"
@@ -363,9 +348,6 @@ int main(int argc, char **argv)
         break;
       case 'L':
         lin = 1;
-        break;
-      case 'M':
-        mult = 1;
         break;
       case 'w':
         weighted = 1;
@@ -409,7 +391,6 @@ int main(int argc, char **argv)
   printf("Priority Q   : %d\n", pq);
   printf("Spray List   : %d\n", sl);
   printf("Linden       : %d\n", lin);
-  printf("MultiQueue   : %d\n", mult);
   printf("Type sizes   : int=%d/long=%d/ptr=%d/word=%d\n",
       (int)sizeof(int),
       (int)sizeof(long),
@@ -514,11 +495,6 @@ int main(int argc, char **argv)
   set = sl_set_new();
   sl_add_val(set, 0, src, TRANSACTIONAL);
 
-  void *multiqueue, *mq_rand;
-  multiqueue_init(&multiqueue, nb_threads, 4*nb_threads);
-  mq_rand_init(&mq_rand);
-  multiqueue_insert(0, src, multiqueue, mq_rand);
-
   // linden
   if (lin) {
     int offset = 32; // not sure what this does
@@ -571,11 +547,6 @@ int main(int argc, char **argv)
     /* LINDEN */
     data[i].lin = lin;
     data[i].linden_set = linden_set;
-
-    /* MultiQueues */
-    data[i].mult = mult;
-    data[i].multiqueue = multiqueue;
-    mq_rand_init(&(data[i].mq_rand));
 
     if (pthread_create(&threads[i], &attr, sssp, (void *)(&data[i])) != 0) {
       fprintf(stderr, "Error creating thread\n");
@@ -686,8 +657,6 @@ int main(int argc, char **argv)
 
   printf("#total_remove : %lu\n", remove);
   printf("#total_removed: %lu\n", removed);
-  printf("#total_add    : %lu\n", add);
-  printf("#total_added  : %lu\n", added);
   printf("#total_add    : %lu\n", add);
   printf("#total_added  : %lu\n", added);
   printf("#net (rem-add): %lu\n", removed-added);
