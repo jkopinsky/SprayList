@@ -50,7 +50,6 @@
 #define DEFAULT_SL                      0
 #define DEFAULT_ES                      0
 #define DEFAULT_LIN                     0
-#define DEFAULT_MULT                    0
 #define DEFAULT_EFFECTIVE               1
 
 #define XSTR(s)                         STR(s)

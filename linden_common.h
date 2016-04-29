@@ -9,7 +9,7 @@
 #include <stdint.h>
 #include <string.h>
 #include <pthread.h>
-//#include <gsl/gsl_rng.h>
+#include <gsl/gsl_rng.h>
 #include "fraser.h"
 
 #if defined(__linux__)
@@ -53,7 +53,7 @@ typedef struct thread_args_s
 {
     pthread_t thread;
     int id;
-    //gsl_rng *rng;
+    gsl_rng *rng;
     int measure;
     int cycles;
     char pad[128];

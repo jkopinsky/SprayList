@@ -38,6 +38,3 @@ int lotan_shavit_delete_min_key(sl_intset_t *set, slkey_t *key, val_t *val, thre
 int lotan_shavit_delete_min(sl_intset_t *set, val_t *val, thread_data_t *d);
 int spray_delete_min_key(sl_intset_t *set, slkey_t *key, val_t *val, thread_data_t *d);
 int spray_delete_min(sl_intset_t *set, val_t *val, thread_data_t *d);
-
-// multiqueue
-int multi_queue_delete_min(sl_intset_t *set, slkey_t *key, val_t *val, thread_data_t *d);

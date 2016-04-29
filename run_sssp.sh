@@ -26,18 +26,15 @@ for i in "${num_procs[@]}"
 do
   spray_u[$i]=`$bin -i $input -o out.txt -n $i -l -m 2000000 | grep $var | grep '(?<= )[0-9]+\.?[0-9]*' -Po`
   lotan_shavit_u[$i]=`$bin -i $input -o out.txt -n $i -p -m 2000000 | grep $var | grep '(?<= )[0-9]+\.?[0-9]*' -Po`
-  multiqueue_u[$i]=`$bin -i $input -o out.txt -n $i -M -m 2000000 | grep $var | grep '(?<= )[0-9]+\.?[0-9]*' -Po`
-#  linden_u[$i]=`$bin -i $input -o out.txt -n $i -L -m 2000000 | grep $var | grep '(?<= )[0-9]+\.?[0-9]+' -Po`
+  linden_u[$i]=`$bin -i $input -o out.txt -n $i -L -m 2000000 | grep $var | grep '(?<= )[0-9]+\.?[0-9]+' -Po`
   spray_w[$i]=`$bin -i $input -o out.txt -n $i -l -w -m 2000000 | grep $var | grep '(?<= )[0-9]+\.?[0-9]*' -Po`
   lotan_shavit_w[$i]=`$bin -i $input -o out.txt -n $i -p -w -m 2000000 | grep $var | grep '(?<= )[0-9]+\.?[0-9]*' -Po`
-  multiqueue_w[$i]=`$bin -i $input -o out.txt -n $i -M -w -m 2000000 | grep $var | grep '(?<= )[0-9]+\.?[0-9]*' -Po`
-#  linden_w[$i]=`$bin -i $input -o out.txt -n $i -L -w -m 2000000 | grep $var | grep '(?<= )[0-9]+\.?[0-9]+' -Po`
-#  spray_b[$i]=`$bin -i $input -o out.txt -n $i -l -b -m 2000000 | grep $var | grep '(?<= )[0-9]+\.?[0-9]*' -Po`
-#  lotan_shavit_b[$i]=`$bin -i $input -o out.txt -n $i -p -b -m 2000000 | grep $var | grep '(?<= )[0-9]+\.?[0-9]*' -Po`
-#  linden_b[$i]=`$bin -i $input -o out.txt -n $i -L -b -m 2000000 | grep $var | grep '(?<= )[0-9]+\.?[0-9]+' -Po`
+  linden_w[$i]=`$bin -i $input -o out.txt -n $i -L -w -m 2000000 | grep $var | grep '(?<= )[0-9]+\.?[0-9]+' -Po`
+  spray_b[$i]=`$bin -i $input -o out.txt -n $i -l -b -m 2000000 | grep $var | grep '(?<= )[0-9]+\.?[0-9]*' -Po`
+  lotan_shavit_b[$i]=`$bin -i $input -o out.txt -n $i -p -b -m 2000000 | grep $var | grep '(?<= )[0-9]+\.?[0-9]*' -Po`
+  linden_b[$i]=`$bin -i $input -o out.txt -n $i -L -b -m 2000000 | grep $var | grep '(?<= )[0-9]+\.?[0-9]+' -Po`
 
-# echo $i,${spray_u[$i]},${lotan_shavit_u[$i]},${linden_u[$i]},${spray_w[$i]},${lotan_shavit_w[$i]},${linden_w[$i]},${spray_b[$i]},${lotan_shavit_b[$i]},${linden_b[$i]}
-  echo $i,${spray_u[$i]},${lotan_shavit_u[$i]},${multiqueue_u[$i]},${spray_w[$i]},${lotan_shavit_w[$i]},${multiqueue_w[$i]}
+  echo $i,${spray_u[$i]},${lotan_shavit_u[$i]},${linden_u[$i]},${spray_w[$i]},${lotan_shavit_w[$i]},${linden_w[$i]},${spray_b[$i]},${lotan_shavit_b[$i]},${linden_b[$i]}
 done
 
 

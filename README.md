@@ -7,7 +7,7 @@ PREREQUISITES
 -------------
 
 gcc 4.6
-gsl
+gsl (should be removed soon)
 
 
 INSTALL

@@ -13,7 +13,7 @@ CC ?= gcc
 ifeq ($(VERSION),DEBUG)
      CFLAGS	+= -g -DDEBUG -O0
 else
-     CFLAGS	+= -g -O3 -DNDEBUG 
+     CFLAGS	+= -O3 -DNDEBUG 
 endif
 
 BINDIR		?= $(ROOT)/bin
@@ -23,7 +23,6 @@ $(shell [ -d "$(BUILDIR)" ] || mkdir -p $(BUILDIR))
 $(shell [ -d "$(BINDIR)" ] || mkdir -p $(BINDIR))
 
 LIBAO_INC = $(ROOT)/atomic_ops
-MQ = $(ROOT)/multiqueue
 
 #############################
 # Platform dependent settings
@@ -105,11 +104,10 @@ CFLAGS += -D_GNU_SOURCE
 CFLAGS += -DLOCKFREE
 CFLAGS += -Wall
 CFLAGS += -fno-strict-aliasing
-CFLAGS += -I$(LIBAO_INC) -I$(ROOT)/include -I$(MQ)
+CFLAGS += -I$(LIBAO_INC) -I$(ROOT)/include
 
 #LDFLAGS += -L$(LIBAO)/lib -latomic_ops 
 LDFLAGS += -lpthread -lrt -lm
-LDMQ = -L./multiqueue -lmultiqueue_wrapper -lsfmt
 
 LINDENFLAGS = -DCACHE_LINE_SIZE=`getconf LEVEL1_DCACHE_LINESIZE` -DINTEL
 
@@ -161,7 +159,7 @@ spray: measurements.o ssalloc.o skiplist.o fraser.o intset.o test.o pqueue.o lin
 	$(CC) $(CFLAGS) $(BUILDIR)/pqueue.o $(BUILDIR)/measurements.o $(BUILDIR)/ssalloc.o $(BUILDIR)/skiplist.o $(BUILDIR)/fraser.o $(BUILDIR)/intset.o $(BUILDIR)/test.o $(BUILDIR)/linden.o $(BUILDIR)/linden_common.o $(BUILDIR)/ptst.o $(BUILDIR)/gc.o -o $(SPRAY) $(LDFLAGS)
 
 sssp: measurements.o ssalloc.o skiplist.o fraser.o intset.o sssp.o pqueue.o linden.o linden_common.o gc.o ptst.o
-	$(CC) $(CFLAGS) $(BUILDIR)/pqueue.o $(BUILDIR)/measurements.o $(BUILDIR)/ssalloc.o $(BUILDIR)/skiplist.o $(BUILDIR)/fraser.o $(BUILDIR)/intset.o $(BUILDIR)/sssp.o $(BUILDIR)/linden.o $(BUILDIR)/linden_common.o $(BUILDIR)/ptst.o $(BUILDIR)/gc.o -o $(SSSP) $(LDFLAGS) $(LDMQ)
+	$(CC) $(CFLAGS) $(BUILDIR)/pqueue.o $(BUILDIR)/measurements.o $(BUILDIR)/ssalloc.o $(BUILDIR)/skiplist.o $(BUILDIR)/fraser.o $(BUILDIR)/intset.o $(BUILDIR)/sssp.o $(BUILDIR)/linden.o $(BUILDIR)/linden_common.o $(BUILDIR)/ptst.o $(BUILDIR)/gc.o -o $(SSSP) $(LDFLAGS)
 
 clean:
 	-rm -f $(BINS) $(BUILDIR)/*.o
