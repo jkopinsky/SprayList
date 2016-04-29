@@ -283,7 +283,6 @@ int main(int argc, char **argv)
   struct timeval start, end;
   int nb_threads = DEFAULT_NB_THREADS;
   int seed = DEFAULT_SEED;
-  int seed2 = DEFAULT_SEED;
   int pq = DEFAULT_PQ;
   int sl = DEFAULT_SL;
   int lin = DEFAULT_LIN;
@@ -293,7 +292,6 @@ int main(int argc, char **argv)
   int max = -1;
   int weighted = 0;
   int bimodal = 0;
-  sigset_t block_set;
 
   while(1) {
     i = 0;
@@ -426,7 +424,6 @@ int main(int argc, char **argv)
   }
 
   int u,v;
-  int cur = 0, count = 0;
   while (fscanf(fp, "%d %d\n", &u, &v) == 2) {
     if (u >= size) continue;
     if (v >= size) continue;
@@ -482,13 +479,6 @@ int main(int argc, char **argv)
     idx[u]++;
   }
   free(idx);
-
-
-//  for (u = 0; u < size; u++) {
-//    for (count = 0; count < nodes[u].deg; count++) {
-//      printf("%d %d\n", u, nodes[u].adj[count]);
-//    }
-//  }
 
   // pq/sl
   *levelmax = floor_log_2(size)+2;
@@ -546,7 +536,9 @@ int main(int argc, char **argv)
 
     /* LINDEN */
     data[i].lin = lin;
-    data[i].linden_set = linden_set;
+    if (lin) {
+      data[i].linden_set = linden_set;
+    }
 
     if (pthread_create(&threads[i], &attr, sssp, (void *)(&data[i])) != 0) {
       fprintf(stderr, "Error creating thread\n");
@@ -589,12 +581,12 @@ int main(int argc, char **argv)
   if (strcmp(output,"")) {
     FILE *out = fopen(output, "w");
     for (i = 0;i < size;i++) {
-      fprintf(out, "%d %d\n", i, nodes[i].dist);
+      fprintf(out, "%d %lu\n", i, nodes[i].dist);
     }
     fclose(out);
   } else {
     for (i = 0;i < size;i++) {
-      printf("%d %d\n", i, nodes[i].dist);
+      printf("%d %lu\n", i, nodes[i].dist);
     }
   }
 
@@ -640,9 +632,9 @@ int main(int argc, char **argv)
     size += data[i].nb_added - data[i].nb_removed;
   }
   printf("Set size      : %d (expected: %d)\n", sl_set_size(set), size);
-  printf("nodes processed:%d\n", nb_processed);
-  printf("unreachable   : %d\n", unreachable);
-  printf("wasted work   : %d\n", nb_processed - (size - unreachable));
+  printf("nodes processed:%lu\n", nb_processed);
+  printf("unreachable   : %lu\n", unreachable);
+  printf("wasted work   : %lu\n", nb_processed - (size - unreachable));
 
   printf("Duration      : %d (ms)\n", duration);
   printf("#ops          : %lu (%f / s)\n", reads + updates, (reads + updates) * 1000.0 / duration);

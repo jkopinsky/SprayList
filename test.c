@@ -592,7 +592,7 @@ int main(int argc, char **argv)
 
   if (lin) {
     int offset = 32; // not sure what this does
-     _init_gc_subsystem();
+    _init_gc_subsystem();
     linden_set = pq_init(offset);
   }
 
