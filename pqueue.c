@@ -72,7 +72,7 @@ int lotan_shavit_delete_min_key(sl_intset_t *set, slkey_t *key, val_t *val, thre
   result = (first->next[0] != NULL);
   if (!result) {
     *key = -1;
-    return 1;
+    return 0;
   }
   
   *val = (first->val);
