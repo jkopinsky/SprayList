@@ -26,6 +26,9 @@
 #include "linden.h"
 //#include "gc/ptst.h"
 
+// Needed for ssalloc
+int number_of_threads;
+
 #define MAX_DEPS 10
 
 //#define PAPI 1
@@ -121,7 +124,7 @@ void* test(void *data) {
   TM_THREAD_ENTER(d->id);
   set_cpu(the_cores[d->id]);
   /* Wait on barrier */
-  ssalloc_init();
+  ssalloc_init(number_of_threads);
   PF_CORRECTION;
 
   seeds = seed_rand();
@@ -347,8 +350,6 @@ void catcher(int sig)
 int main(int argc, char **argv)
 {
   set_cpu(the_cores[0]);
-  ssalloc_init();
-  seeds = seed_rand();
 
 #ifdef PAPI
   if (PAPI_VER_CURRENT != PAPI_library_init(PAPI_VER_CURRENT))
@@ -534,6 +535,11 @@ int main(int argc, char **argv)
   assert(range > 0);
   assert(update >= 0 && update <= 100);
 
+  number_of_threads = nb_threads;
+
+  ssalloc_init(number_of_threads);
+  seeds = seed_rand();
+  
   // if (range < initial)
   // {
   range = 100000000;

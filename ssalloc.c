@@ -29,15 +29,22 @@ ssalloc_set(void* mem)
   ssalloc_app_mem[0] = mem;
 #endif
 }
+#define PADDING_CONSTANT 32
+size_t allocated_space_per_thread_with_padding[PADDING_CONSTANT*2];
 
 void
-ssalloc_init()
+ssalloc_init(int number_of_threads)
 {
 #if !defined(SSALLOC_USE_MALLOC)
   int i;
   for (i = 0; i < SSALLOC_NUM_ALLOCATORS; i++)
     {
+#ifdef SSALLOC_SIZE_ALL
+      allocated_space_per_thread_with_padding[PADDING_CONSTANT] = SSALLOC_SIZE_ALL / number_of_threads; 
+      ssalloc_app_mem[i] = (void*) memalign(64, SSALLOC_SIZE_ALL / number_of_threads);
+#else
       ssalloc_app_mem[i] = (void*) memalign(64, SSALLOC_SIZE);
+#endif
       assert(ssalloc_app_mem[i] != NULL);
     }
 #endif
@@ -107,7 +114,11 @@ ssalloc_alloc(unsigned int allocator, size_t size)
     {
       ret = ssalloc_app_mem[allocator] + alloc_next[allocator];
       alloc_next[allocator] += size;
+#ifdef SSALLOC_SIZE_ALL
+      if (alloc_next[allocator] > allocated_space_per_thread_with_padding[PADDING_CONSTANT])
+#else
       if (alloc_next[allocator] > SSALLOC_SIZE)
+#endif
 	{
 	  fprintf(stderr, "*** warning: allocator %2d : out of bounds alloc\n", allocator);
 	}
