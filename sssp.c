@@ -13,6 +13,9 @@
 #include "linden.h"
 //#include "gc/ptst.h"
 
+// Needed for ssalloc
+int number_of_threads;
+
 //#define STATIC
 #define MAX_DEPS 10
 #define MAX_NODES 9000000
@@ -121,7 +124,7 @@ void* sssp(void *data) {
   /* Create transaction */
   set_cpu(the_cores[d->id]);
   /* Wait on barrier */
-  ssalloc_init();
+  ssalloc_init(number_of_threads);
   PF_CORRECTION;
 
   seeds = seed_rand();
@@ -231,8 +234,6 @@ void catcher(int sig)
 int main(int argc, char **argv)
 {
   set_cpu(the_cores[0]);
-  ssalloc_init();
-  seeds = seed_rand();
   pin(pthread_self(), 0);
 
 #ifdef PAPI
@@ -378,6 +379,12 @@ int main(int argc, char **argv)
 
   assert(nb_threads > 0);
 
+  number_of_threads = nb_threads;
+
+  ssalloc_init(number_of_threads);
+
+  seeds = seed_rand();
+  
   if (seed == 0)
     srand((int)time(0));
   else

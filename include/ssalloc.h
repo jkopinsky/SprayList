@@ -28,12 +28,13 @@
 #else
 #  define SSALLOC_SIZE (1024 * 1024 * 1024)
 #endif
+#define SSALLOC_SIZE_ALL (size_t)((size_t)10 * (size_t)1024 * (size_t)1024 * (size_t)1024)
 
 /* extern const size_t ssalloc_size_alloc[SSALLOC_NUM_ALLOCATORS]; */
 
 
 void ssalloc_set(void* mem);
-void ssalloc_init();
+void ssalloc_init(int number_of_threads);
 void ssalloc_align();
 void ssalloc_align_alloc(unsigned int allocator);
 void ssalloc_offset(size_t size);
